@@ -5,7 +5,7 @@ const sendButton = document.getElementById('sendButton');
 const typingIndicator = document.getElementById('typingIndicator');
 
 // URL do webhook (substitua pelo seu webhook real)
-const WEBHOOK_URL = "https://n8n.sisloc.com/webhook-test/53812e1a-a352-4d00-957d-7b4a94c6edc7";
+const WEBHOOK_URL = "https://n8n.sisloc.com/webhook-test/cdb63d5d-aa62-40eb-9cc8-88928586c424";
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', () => {
@@ -26,7 +26,7 @@ userInput.addEventListener('keypress', (e) => {
 /**
  * Função principal para enviar mensagem do usuário e obter resposta
  */
-function sendMessage() {
+async function sendMessage() {
     const userMessage = userInput.value.trim();
     
     // Verifica se a mensagem não está vazia
@@ -41,9 +41,8 @@ function sendMessage() {
     
     // Mostra indicador de digitação
     showTypingIndicator();
-    
     // Envia a mensagem para o webhook
-    sendToWebhook(userMessage);
+    await sendToWebhook(userMessage);
 }
 
 /**
@@ -67,17 +66,49 @@ function addMessageToChat(text, sender) {
  * Envia a mensagem para o webhook e processa a resposta
  * @param {string} userMessage - Mensagem do usuário
  */
-function sendToWebhook(userMessage) {
-    fetch(WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage })
-    })
+async function sendToWebhook(userMessage){
+
+    console.log("Enviando mensagem para o webhook:", userMessage);
+    // Mostra o indicador de digitação
+    showTypingIndicator();
+
+    try {
+
+        const request = await fetch(WEBHOOK_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: userMessage }),
+          });
+          const response = await request.json()
+        console.log("Resposta do webhook:", response);
+
+        addMessageToChat(response.message, 'bot');
+        hideTypingIndicator();
+
+        return
+
+    } catch (error) {
+            hideTypingIndicator();
+            addMessageToChat(error + " Erro de conexão. Verifique se o webhook está configurado corretamente.", 'bot');        
+        }
+
+    
+      /*  await fetch(WEBHOOK_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: userMessage })
+        })
     .then(response => {
+
         if (!response.ok) {
             throw new Error(`Erro na requisição: ${response.status}`);
         }
-        return response.json();
+
+        console.log("Resposta do webhook:", response);
+
+        addMessageToChat(response.json(), 'bot');
+        
+        return response;
     })
     .then(data => {
         // Esconde o indicador de digitação
@@ -90,11 +121,13 @@ function sendToWebhook(userMessage) {
             addMessageToChat("Desculpe, ocorreu um erro ao processar sua mensagem.", 'bot');
         }
     })
+    
     .catch(error => {
         console.error('Erro:', error);
         hideTypingIndicator();
-        addMessageToChat("Erro de conexão. Verifique se o webhook está configurado corretamente.", 'bot');
-    });
+        addMessageToChat(error + " Erro de conexão. Verifique se o webhook está configurado corretamente.", 'bot');
+    });*/
+    
 }
 
 /**
